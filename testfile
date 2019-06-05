@@ -1,0 +1,1 @@
+type=ramp,interval=0.02,sourcetype=a,metertype=v,max_voltage=10,compliance_voltage=10,rear =false, tf = 5.0, source_i = 0, source_f = 4 
