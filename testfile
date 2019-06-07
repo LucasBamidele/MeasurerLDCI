@@ -1,1 +1,1 @@
-type=ramp,interval=0.02,sourcetype=a,metertype=v,max_voltage=10,max_current=0.01compliance_voltage=10,rear =false, endTime = 5.0, source_i = 0.0, source_f = 4.0
+type=ramp,interval=0.1,sourcetype=a,metertype=v,max_voltage=10,max_current=0.01,compliance_voltage=10,rear =false, endTime = 5.0, source_i = 0.0, source_f = 0.01
