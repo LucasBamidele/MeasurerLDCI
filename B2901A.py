@@ -6,6 +6,9 @@ class B901A(object):
 		rm = visa.ResourceManager()
 		self.scm = rm.open_resource('GPIB0::23::INSTR')
 
+	def reset(self):
+		self.write("*RST")
+
 	def write(self, command):
 		pass
 
@@ -38,12 +41,19 @@ class B901A(object):
 	def setMaxCurrent(self, value=0.1):
 		self.write(":SENS:CURR:PROT " + str(value))
 
-	def voltageRange(self, range):
+	def setVoltageRange(self, range):
 		self.write(":SOUR:VOLT:RANG:AUTO OFF")
 		self.write(":SOUR:VOLT:RANG 2")
 
+	def setMeasureVoltage(self):
+		self.write(":SOUR:FUNC VOLT")
 
+	def setToMeasureCurrent(self):
+		self.write(":SENS:FUNC CURR")
 
+	def readVoltage(self):
+		return  self.query(":MEAS:VOLT?")
+	
 
 
 		
