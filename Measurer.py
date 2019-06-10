@@ -74,7 +74,7 @@ class Measurer(object):
 			self.setToVoltage()
 			i = 0
 			while(i < number_samples):
-				time.sleep(self.interval+1)
+				time.sleep(self.interval)
 				self.scm.source_voltage += increment
 				self.registerReading()
 				i+=1
