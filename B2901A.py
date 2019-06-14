@@ -1,8 +1,8 @@
 import visa
+from time import sleep
 class B901A(object):
 	"""docstring for B901A"""
-	def __init__(self, arg):
-		self.arg = arg
+	def __init__(self):
 		rm = visa.ResourceManager()
 		self.scm = rm.open_resource('GPIB0::23::INSTR')
 
@@ -10,13 +10,14 @@ class B901A(object):
 		self.write("*RST")
 
 	def write(self, command):
-		pass
+		self.scm.write(command)
 
 	def query(self, command):
-		pass
+		return self.scm.query(command)
 
 	def read(self, command):
 		pass
+		
 	def enableSourceOutput(self):
 		self.write(":OUTP ON")
 
@@ -52,8 +53,27 @@ class B901A(object):
 		self.write(":SENS:FUNC CURR")
 
 	def readVoltage(self):
-		return  self.query(":MEAS:VOLT?")
+		return self.query(":MEAS:VOLT?")
 	
+	def readCurrent(self):
+		return self.query(":MEAS:CURR?")
+def main():
+	a = B901A()
+	a.enableSourceOutput()
+	a.setCurrentOutput()
+	a.applyCurrent(0)
+	sleep(0.1)
+	a.setMeasureVoltage()
+	a.setMaxVoltage(10)
+	for x in range(0,11):
+		curr_value = 0.005*(0.1*x)
+		a.applyCurrent(curr_value)
+		print('current: ', "{:.9f}".format(curr_value), '  voltage: ', "{:.9f}".format(float(a.readVoltage())))
+		sleep(0.1)
+	a.disableSourceOutput()
 
+
+if __name__ == '__main__':
+	main()
 
 		
