@@ -28,8 +28,8 @@ class Measurer(object):
 	def __init__(self, filename):
 		if(filename):
 			self.filename = filename
-			self.scm = Keithley2400("GPIB::24")
-			self.scm2 = B2901A("GPIB::23")
+			self.scm = Keithley2400("GPIB1::24")
+			self.scm2 = B2901A("GPIB0::23")
 			self.config = {}
 			self.readFile()
 			self.keithley_reading = []
@@ -39,7 +39,7 @@ class Measurer(object):
 		f = open(self.filename)
 
 		string = f.readline()
-		if(string != 'Keithley2400'):
+		if(string.strip() != 'Keithley2400'):
 			print('Wrong config, must be keithley2400')
 			exit()
 		string = f.readline()
@@ -51,7 +51,7 @@ class Measurer(object):
 		self.config['Keithley2400'] = aux_dict
 
 		string = f.readline()
-		if(string != 'B2901A'):
+		if(string.strip() != 'B2901A'):
 			print('Wrong config, must be B2901A')
 			exit()
 		string = f.readline()
@@ -87,6 +87,7 @@ class Measurer(object):
 			exit('Config error!')
 		if(self.config['Keithley2400']['metertype']=='v'):
 			self.scm.measure_voltage()
+			print('measure voltage!')
 		elif(self.config['Keithley2400']['metertype']=='a'):
 			self.scm.measure_current()
 		else :
@@ -98,7 +99,6 @@ class Measurer(object):
 			self.b_metertype = self.config['B2901A']['metertype']
 			self.b_source_i = float(self.config['B2901A']['source_i'])
 			self.b_source_f = float(self.config['B2901A']['source_f'])
-			self.
 		except Exception as e:
 			raise e
 			exit('Config error!')
@@ -130,7 +130,7 @@ class Measurer(object):
 	def setToCurrent(self):
 		self.scm.apply_current()
 		self.scm.source_current_range = float(self.config['Keithley2400']['max_current'])
-		self.scm.source_voltage_range = float(self.config['Keithley2400']['max_voltage'])
+		#self.scm.source_voltage_range = float(self.config['Keithley2400']['max_voltage'])
 		self.scm.compliance_voltage = float(self.config['Keithley2400']['compliance_voltage'])
 		self.scm.source_current = float(self.source_i)
 		self.scm.enable_source()
@@ -195,9 +195,9 @@ class Measurer(object):
 		inputs = np.linspace(self.source_i, self.source_f, number_samples)
 		outputs = np.array(self.keithley_reading)
 		binputs = np.linspace(self.source_i, self.source_f, number_samples)
-		outputs = np.array(self.b2901a_reading)
+		boutputs = np.array(self.b2901a_reading)
 		self.plot(inputs, outputs)
-		save.write(self.sourcetype + ', ' + self.metertype + '\t' self.scm2.sourcetype + ' ' self.b_metertype)
+		save.write(self.sourcetype + ', ' + self.metertype + '\t' + self.scm2.sourcetype + ' ' + self.b_metertype)
 		save.write('\n')
 		for (inp,outp, binp, boutp) in zip(inputs, outputs, binputs, boutputs):
 			mystring = "{:.9f}".format(float(inp)) + ', ' + "{:.9f}".format(float(outp)) + '\t'
@@ -221,14 +221,16 @@ class Measurer(object):
 		if(func == 'ramp'):
 			self.rampFunction()
 		elif(func == 'step'):
-			self.unitStepFunction
+			self.unitStepFunction()
 		elif(func == 'custom'):
 			print('not yet implemented')
 			exit('exiting...')
 		self.saveLog()
+		self.scm.shutdown()
+		self.scm2.disableSourceOutput()
 
 def testScript():
-	keithley = Keithley2400("GPIB::24")
+	keithley = Keithley2400("GPIB1::24")
 	keithley.apply_current()                # Sets up to source current
 	keithley.source_current_range = 10e-3   # Sets the source current range to 10 mA
 	keithley.compliance_voltage = 10        # Sets the compliance voltage to 10 V

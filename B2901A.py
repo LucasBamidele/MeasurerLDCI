@@ -70,15 +70,15 @@ class B2901A(object):
 		return self.query(":MEAS:CURR?")
 
 def main():
-	a = B2901A()
+	a = B2901A("GPIB0::23")
 	a.enableSourceOutput()
 	a.setCurrentOutput()
 	a.applyCurrent(0)
 	sleep(0.1)
 	a.setMeasureVoltage()
 	a.setMaxVoltage(10)
-	for x in range(0,11):
-		curr_value = 0.005*(0.1*x)
+	for x in range(0,101):
+		curr_value = 0.005*(0.01*x)
 		a.applyCurrent(curr_value)
 		print('current: ', "{:.9f}".format(curr_value), '  voltage: ', "{:.9f}".format(float(a.readVoltage())))
 		sleep(0.1)
