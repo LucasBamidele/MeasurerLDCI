@@ -4,23 +4,9 @@ import numpy as np
 from B2901A import *
 current_time_ms = lambda:int(round(time.time()*1000))
 """
-TODO: ADD B2901A CLASS
-	IMPORT IT HERE
-	ADD AS SECONDARY SOURCEMETER
-	ADD NEW LINE ON FILE FOR ITS CONFIG
-	NEED TO DIFFERENTIATE LINES FROM SCM1 AND 2 (MAYBE ADD A DICT LAYER)
-		{
-			b2901a =>	{	
-							type => x
-							output => voltage
-							etc
-						}
-			keithley =>	{
-							type => y
-							output => current
-							etc			
-						}
-		}
+TODO: ADD PARAMETRIZED MEASUREMENT
+	CHANGE READFILE PARAMETERS
+	CHANGE HOW EXECUTE WORKS
 
 """
 class Measurer(object):
@@ -37,7 +23,8 @@ class Measurer(object):
 
 	def readFile(self):
 		f = open(self.filename)
-
+		string = f.readline()
+		self.config['Experiment'] = string.split('=').strip()
 		string = f.readline()
 		if(string.strip() != 'Keithley2400'):
 			print('Wrong config, must be keithley2400')
@@ -158,6 +145,84 @@ class Measurer(object):
 				time.sleep(self.interval)
 				self.registerReading()
 				i+=1
+	def incrementSourceKeithley(self, increment):
+		if(self.sourcetype=='v'):
+			self.scm.source_voltage += increment
+		elif(self.sourcetype=='a'):
+			self.scm.source_current += increment
+
+	def subplot(self):
+		pass
+
+	def parametrizedB2901(self):
+		number_samples = self.endTime/self.interval
+		increment = (self.source_f - self.source_i)/float(number_samples)
+		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		if(self.sourcetype == 'v'):
+			self.setToVoltage()
+			i = 0
+			while(i < number_samples):
+				j = 0
+				self.scm2.setSource(self.b_source_i)
+				while(j < number_samples)
+					time.sleep(self.interval)
+					self.scm2.incrementSource(b_increment)
+					self.registerReading()
+					j+=1
+				self.scm.source_voltage += increment
+				self.subplot()
+				i+=1
+		else :
+			self.setToCurrent()
+			i = 0
+			while(i < number_samples):
+				j = 0
+				self.scm2.setSource(self.b_source_i)
+				while(j < number_samples):
+					self.scm2.incrementSource(b_increment)
+					time.sleep(self.interval)
+					self.registerReading()
+					j += 1
+				self.scm.source_current += increment
+				i+=1
+
+	def parametrizedKeithley(self):
+		number_samples = self.endTime/self.interval
+		increment = (self.source_f - self.source_i)/float(number_samples)
+		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		if(self.sourcetype == 'v'):
+			self.setToVoltage()
+			i = 0
+			while(i < number_samples):
+				j = 0
+				self.scm.source_voltage = self.source_i
+				while(j < number_samples)
+					time.sleep(self.interval)
+					self.scm.source_voltage += increment
+					self.registerReading()
+					j+=1
+				self.scm2.incrementSource(b_increment)
+				self.subplot()
+				i+=1
+		else :
+			self.setToCurrent()
+			i = 0
+			while(i < number_samples):
+				j = 0
+				self.scm.source_current = self.source_i
+				while(j < number_samples):
+					self.scm.source_current += increment
+					time.sleep(self.interval)
+					self.registerReading()
+					j += 1
+				self.subplot()
+				self.scm2.incrementSource(b_increment)
+				i+=1
+
+	def parametrizedMeasure(self):
+		pass
+		#set if b2901a or keithley
+
 
 	def unitStepFunction(self):
 		number_samples = self.endTime/self.interval

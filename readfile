@@ -1,3 +1,5 @@
+experiment=param_b2901a, param_keithley, parallel, b2901a, keithley
+
 type=custom/ramp/pulse, interval=null/float(min = 0.2), sourcetype=a/v, metertype=a/v, max_voltage=int, compliance_voltage=int, rear=bool, tf(tempo final) = float, source_i=float, source_f = float,
 
 type=ramp,interval=0.01,sourcetype=a,metertype=v,max_voltage=10,compliance_voltage=10,rear=false

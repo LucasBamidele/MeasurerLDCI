@@ -38,6 +38,11 @@ class B2901A(object):
 		elif(self.sourcetype=='a'):
 			self.applyCurrent(self.curr_source_value)
 
+	def setSource(self, value):
+		if(self.sourcetype == 'v'):
+			self.applyVoltage(value)
+		elif(self.sourcetype=='a'):
+			self.applyCurrent(value)
 	def setCurrentOutput(self):
 		self.write(":SOUR:FUNC:MODE CURR")
 
