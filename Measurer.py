@@ -174,7 +174,7 @@ class Measurer(object):
 					j+=1
 				axis_x = self.keithley_reading[i*j:i*j + j]
 				axis_y = self.b2901a_reading[i*j:i*j+j]
-				self.subplot()
+				self.subplot(axis_x, axis_y, self.scm.source_voltage)
 				self.scm.source_voltage += increment
 				i+=1
 		else :
@@ -183,14 +183,13 @@ class Measurer(object):
 			while(i < parametrized_samples):
 				j = 0
 				self.scm2.setSource(0)
-				print('bump')
 				while(j < number_samples):
 					self.scm2.incrementSource(b_increment)
 					time.sleep(self.interval)
 					self.registerReading()
 					j += 1
-				axis_y = self.keithley_reading[i*j:i*j + j]
-				axis_x = self.b2901a_reading[i*j:i*j+j]
+				axis_x = self.keithley_reading[i*j:i*j + j]
+				axis_y = self.b2901a_reading[i*j:i*j+j]
 				self.subplot(axis_x, axis_y, self.scm.source_current)
 				self.scm.source_current += increment
 				i+=1
@@ -214,8 +213,10 @@ class Measurer(object):
 					self.scm.source_voltage += increment
 					self.registerReading()
 					j+=1
+				axis_y = self.keithley_reading[i*j:i*j + j]
+				axis_x = self.b2901a_reading[i*j:i*j+j]
+				self.subplot(axis_x, axis_y, self.scm.curr_source_value)
 				self.scm2.incrementSource(b_increment)
-				self.subplot()
 				i+=1
 		else :
 			self.setToCurrent()
@@ -228,7 +229,9 @@ class Measurer(object):
 					time.sleep(self.interval)
 					self.registerReading()
 					j += 1
-				self.subplot()
+				axis_y = self.keithley_reading[i*j:i*j + j]
+				axis_x = self.b2901a_reading[i*j:i*j+j]
+				self.subplot(axis_x, axis_y, self.scm2.curr_source_value)
 				self.scm2.incrementSource(b_increment)
 				i+=1
 
@@ -276,7 +279,6 @@ class Measurer(object):
 		outputs = np.array(self.keithley_reading)
 		binputs = np.linspace(self.source_i, self.source_f, number_samples)
 		boutputs = np.array(self.b2901a_reading)
-		#self.plot(inputs, outputs)
 		save.write(self.sourcetype + ', ' + self.metertype + '\t' + self.scm2.sourcetype + ' ' + self.b_metertype)
 		save.write('\n')
 		for (inp,outp, binp, boutp) in zip(inputs, outputs, binputs, boutputs):
@@ -285,9 +287,17 @@ class Measurer(object):
 			save.write(mystring)
 			save.write('\n')
 		save.close()
+		if(not self.isParametrizedExperiment()):
+			self.plot(inputs, outputs)
 		
 	def customFunction(self):
 		pass
+
+	def isParametrizedExperiment(self):
+		if(self.config['Experiment']=='param_keithley' or self.config['Experiment']=='param_b2901a'):
+			return True
+		else:
+			return False
 
 	def plot(self, a, b):
 		plt.plot(a,b)
@@ -296,8 +306,8 @@ class Measurer(object):
 		plt.savefig(self.filename + '.png')
 	def execute(self):
 		self.applyConfigs()
-		if(self.config['Experiment']):
-			print('haha')
+		if(self.isParametrizedExperiment()):
+			print('Parametrized experiment')
 			self.parametrizedMeasure()
 		else :
 			func = self.config['Keithley2400']['type']
