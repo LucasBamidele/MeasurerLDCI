@@ -39,6 +39,7 @@ class B2901A(object):
 			self.applyCurrent(self.curr_source_value)
 
 	def setSource(self, value):
+		self.curr_source_value = value
 		if(self.sourcetype == 'v'):
 			self.applyVoltage(value)
 		elif(self.sourcetype=='a'):

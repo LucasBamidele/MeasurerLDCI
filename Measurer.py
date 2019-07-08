@@ -2,6 +2,7 @@ import time
 from pymeasure.instruments.keithley import Keithley2400
 import numpy as np
 from B2901A import *
+import matplotlib.pyplot as plt
 current_time_ms = lambda:int(round(time.time()*1000))
 """
 TODO: ADD PARAMETRIZED MEASUREMENT
@@ -24,7 +25,8 @@ class Measurer(object):
 	def readFile(self):
 		f = open(self.filename)
 		string = f.readline()
-		self.config['Experiment'] = string.split('=').strip()
+		self.config['Experiment'] = string.split('=')[1].strip()
+		print(self.config['Experiment'])
 		string = f.readline()
 		if(string.strip() != 'Keithley2400'):
 			print('Wrong config, must be keithley2400')
@@ -151,52 +153,63 @@ class Measurer(object):
 		elif(self.sourcetype=='a'):
 			self.scm.source_current += increment
 
-	def subplot(self):
-		pass
+	def subplot(self,x,y, mylabel):
+		plt.plot(x,y, label=mylabel)
 
 	def parametrizedB2901(self):
 		number_samples = self.endTime/self.interval
-		increment = (self.source_f - self.source_i)/float(number_samples)
+		parametrized_samples = 10
+		increment = (self.source_f - self.source_i)/float(parametrized_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
 			i = 0
-			while(i < number_samples):
+			while(i < parametrized_samples):
 				j = 0
 				self.scm2.setSource(self.b_source_i)
-				while(j < number_samples)
+				while(j < number_samples):
 					time.sleep(self.interval)
 					self.scm2.incrementSource(b_increment)
 					self.registerReading()
 					j+=1
-				self.scm.source_voltage += increment
+				axis_x = self.keithley_reading[i*j:i*j + j]
+				axis_y = self.b2901a_reading[i*j:i*j+j]
 				self.subplot()
+				self.scm.source_voltage += increment
 				i+=1
 		else :
 			self.setToCurrent()
 			i = 0
-			while(i < number_samples):
+			while(i < parametrized_samples):
 				j = 0
-				self.scm2.setSource(self.b_source_i)
+				self.scm2.setSource(0)
+				print('bump')
 				while(j < number_samples):
 					self.scm2.incrementSource(b_increment)
 					time.sleep(self.interval)
 					self.registerReading()
 					j += 1
+				axis_y = self.keithley_reading[i*j:i*j + j]
+				axis_x = self.b2901a_reading[i*j:i*j+j]
+				self.subplot(axis_x, axis_y, self.scm.source_current)
 				self.scm.source_current += increment
 				i+=1
+		plt.savefig(self.filename + '.png')
+
 
 	def parametrizedKeithley(self):
 		number_samples = self.endTime/self.interval
+		parametrized_samples = 10
+		inputs = np.linspace(self.source_i, self.source_f, number_samples)
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
 			i = 0
-			while(i < number_samples):
+			while(i < parametrized_samples):
 				j = 0
 				self.scm.source_voltage = self.source_i
-				while(j < number_samples)
+				while(j < number_samples):
 					time.sleep(self.interval)
 					self.scm.source_voltage += increment
 					self.registerReading()
@@ -207,7 +220,7 @@ class Measurer(object):
 		else :
 			self.setToCurrent()
 			i = 0
-			while(i < number_samples):
+			while(i < parametrized_samples):
 				j = 0
 				self.scm.source_current = self.source_i
 				while(j < number_samples):
@@ -220,8 +233,10 @@ class Measurer(object):
 				i+=1
 
 	def parametrizedMeasure(self):
-		pass
-		#set if b2901a or keithley
+		if(self.config['Experiment']=='param_b2901a'):
+			self.parametrizedB2901()
+		elif(self.config['Experiment']=='param_keithley'):
+			self.parametrizedKeithley()
 
 
 	def unitStepFunction(self):
@@ -261,7 +276,7 @@ class Measurer(object):
 		outputs = np.array(self.keithley_reading)
 		binputs = np.linspace(self.source_i, self.source_f, number_samples)
 		boutputs = np.array(self.b2901a_reading)
-		self.plot(inputs, outputs)
+		#self.plot(inputs, outputs)
 		save.write(self.sourcetype + ', ' + self.metertype + '\t' + self.scm2.sourcetype + ' ' + self.b_metertype)
 		save.write('\n')
 		for (inp,outp, binp, boutp) in zip(inputs, outputs, binputs, boutputs):
@@ -275,21 +290,24 @@ class Measurer(object):
 		pass
 
 	def plot(self, a, b):
-		import matplotlib.pyplot as plt
 		plt.plot(a,b)
 		plt.ylabel(self.metertype)
 		plt.xlabel(self.sourcetype)
 		plt.savefig(self.filename + '.png')
 	def execute(self):
 		self.applyConfigs()
-		func = self.config['Keithley2400']['type']
-		if(func == 'ramp'):
-			self.rampFunction()
-		elif(func == 'step'):
-			self.unitStepFunction()
-		elif(func == 'custom'):
-			print('not yet implemented')
-			exit('exiting...')
+		if(self.config['Experiment']):
+			print('haha')
+			self.parametrizedMeasure()
+		else :
+			func = self.config['Keithley2400']['type']
+			if(func == 'ramp'):
+				self.rampFunction()
+			elif(func == 'step'):
+				self.unitStepFunction()
+			elif(func == 'custom'):
+				print('not yet implemented')
+				exit('exiting...')
 		self.saveLog()
 		self.scm.shutdown()
 		self.scm2.disableSourceOutput()
