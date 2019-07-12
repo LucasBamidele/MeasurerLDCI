@@ -156,9 +156,8 @@ class Measurer(object):
 	def subplot(self,x,y, mylabel):
 		plt.plot(x,y) #label=mylabel)
 
-	def parametrizedB2901(self):
+	def parametrizedB2901(self, parametrized_samples):
 		number_samples = self.endTime/self.interval
-		parametrized_samples = 5
 		increment = (self.source_f - self.source_i)/float(parametrized_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
@@ -196,13 +195,12 @@ class Measurer(object):
 		self.saveplot(self.source_i, self.source_f, self.b_source_i, self.b_source_f)
 
 	def saveplot(self,xi, xo, yi,yo):
-		ybot, ytop = plt.ylim()
-		plt.ylim(ybot, ytop)
+		# ybot, ytop = plt.ylim()
+		# plt.ylim(ybot, ytop)
 		plt.savefig(self.filename + ".png")
 
-	def parametrizedKeithley(self):
+	def parametrizedKeithley(self,parametrized_samples):
 		number_samples = self.endTime/self.interval
-		parametrized_samples = 5
 		inputs = np.linspace(self.source_i, self.source_f, number_samples)
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(parametrized_samples)
@@ -243,9 +241,9 @@ class Measurer(object):
 
 	def parametrizedMeasure(self):
 		if(self.config['Experiment']=='param_b2901a'):
-			self.parametrizedB2901()
+			self.parametrizedB2901(5)
 		elif(self.config['Experiment']=='param_keithley'):
-			self.parametrizedKeithley()
+			self.parametrizedKeithley(5)
 
 
 	def unitStepFunction(self):
