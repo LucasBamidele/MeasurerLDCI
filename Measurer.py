@@ -154,11 +154,11 @@ class Measurer(object):
 			self.scm.source_current += increment
 
 	def subplot(self,x,y, mylabel):
-		plt.plot(x,y, label=mylabel)
+		plt.plot(x,y) #label=mylabel)
 
 	def parametrizedB2901(self):
 		number_samples = self.endTime/self.interval
-		parametrized_samples = 10
+		parametrized_samples = 5
 		increment = (self.source_f - self.source_i)/float(parametrized_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
@@ -193,15 +193,20 @@ class Measurer(object):
 				self.subplot(axis_x, axis_y, self.scm.source_current)
 				self.scm.source_current += increment
 				i+=1
-		plt.savefig(self.filename + '.png')
+		self.saveplot(self.source_i, self.source_f, self.b_source_i, self.b_source_f)
 
+	def saveplot(self,xi, xo, yi,yo):
+		ybot, ytop = plt.ylim()
+		plt.ylim(ybot, ytop)
+		plt.savefig(self.filename + ".png")
 
 	def parametrizedKeithley(self):
 		number_samples = self.endTime/self.interval
-		parametrized_samples = 10
+		parametrized_samples = 5
 		inputs = np.linspace(self.source_i, self.source_f, number_samples)
 		increment = (self.source_f - self.source_i)/float(number_samples)
-		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		b_increment = (self.b_source_f - self.b_source_i)/float(parametrized_samples)
+		self.scm2.setSource(self.b_source_i)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
 			i = 0
@@ -213,8 +218,8 @@ class Measurer(object):
 					self.scm.source_voltage += increment
 					self.registerReading()
 					j+=1
-				axis_y = self.keithley_reading[i*j:i*j + j]
-				axis_x = self.b2901a_reading[i*j:i*j+j]
+				axis_x = self.keithley_reading[i*j:i*j + j]
+				axis_y = self.b2901a_reading[i*j:i*j+j]
 				self.subplot(axis_x, axis_y, self.scm.curr_source_value)
 				self.scm2.incrementSource(b_increment)
 				i+=1
@@ -229,11 +234,12 @@ class Measurer(object):
 					time.sleep(self.interval)
 					self.registerReading()
 					j += 1
-				axis_y = self.keithley_reading[i*j:i*j + j]
-				axis_x = self.b2901a_reading[i*j:i*j+j]
+				axis_x = self.keithley_reading[i*j:i*j + j]
+				axis_y = self.b2901a_reading[i*j:i*j+j]
 				self.subplot(axis_x, axis_y, self.scm2.curr_source_value)
 				self.scm2.incrementSource(b_increment)
 				i+=1
+		self.saveplot(self.source_i, self.source_f, self.b_source_i, self.b_source_f)
 
 	def parametrizedMeasure(self):
 		if(self.config['Experiment']=='param_b2901a'):
@@ -260,7 +266,6 @@ class Measurer(object):
 	def registerReading(self):
 		if(self.metertype == 'v'):
 			self.keithley_reading.append(self.scm.voltage)
-			print('v', self.scm.voltage)
 		elif(self.metertype == 'a') :
 			self.keithley_reading.append(self.scm.current)
 
