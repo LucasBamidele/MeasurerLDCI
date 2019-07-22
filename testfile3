@@ -1,0 +1,5 @@
+Experiment=param_b2901a
+Keithley2400
+type=ramp,interval=0.1,sourcetype=v,metertype=a,max_voltage=10,max_current=0.01,compliance_voltage=10,rear =true, endTime = 2.0, source_i = 0.0, source_f = 0.5
+B2901A
+type=ramp,interval=0.1,sourcetype=v,metertype=a,max_voltage=10,max_current=0.1,compliance_voltage=10, source_i = 0.0, source_f = 1 

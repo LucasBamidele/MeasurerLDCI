@@ -1,5 +1,8 @@
 import visa
 from time import sleep
+"""
+adicionar measure speed
+"""
 class B2901A(object):
 	"""docstring for B901A"""
 	def __init__(self,port):
@@ -66,7 +69,7 @@ class B2901A(object):
 	def setMeasureVoltage(self):
 		self.write(":SOUR:FUNC VOLT")
 
-	def setToMeasureCurrent(self):
+	def setMeasureCurrent(self):
 		self.write(":SENS:FUNC CURR")
 
 	def readVoltage(self):

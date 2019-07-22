@@ -9,6 +9,11 @@ TODO: ADD PARAMETRIZED MEASUREMENT
 	CHANGE READFILE PARAMETERS
 	CHANGE HOW EXECUTE WORKS
 
+	LONG = 200 ms
+	MEDIO = 2 ms
+	normal = 20 ms
+	short = 0.2 ms
+
 """
 class Measurer(object):
 	"""docstring for Measurer"""
@@ -19,6 +24,8 @@ class Measurer(object):
 			self.scm2 = B2901A("GPIB0::23")
 			self.config = {}
 			self.readFile()
+			self.keithley_input = []
+			self.b2901a_input = []
 			self.keithley_reading = []
 			self.b2901a_reading = []
 
@@ -154,7 +161,8 @@ class Measurer(object):
 			self.scm.source_current += increment
 
 	def subplot(self,x,y, mylabel):
-		plt.plot(x,y) #label=mylabel)
+		pass
+		#plt.plot(x,y) #label=mylabel)
 
 	def parametrizedB2901(self, parametrized_samples):
 		number_samples = self.endTime/self.interval
@@ -171,7 +179,8 @@ class Measurer(object):
 					self.scm2.incrementSource(b_increment)
 					self.registerReading()
 					j+=1
-				axis_x = self.keithley_reading[i*j:i*j + j]
+				#axis_x = self.keithley_reading[i*j:i*j + j]
+				axis_x = self.b2901a_input[i*j: i*j + j]
 				axis_y = self.b2901a_reading[i*j:i*j+j]
 				self.subplot(axis_x, axis_y, self.scm.source_voltage)
 				self.scm.source_voltage += increment
@@ -195,9 +204,10 @@ class Measurer(object):
 		self.saveplot(self.source_i, self.source_f, self.b_source_i, self.b_source_f)
 
 	def saveplot(self,xi, xo, yi,yo):
+		pass
 		# ybot, ytop = plt.ylim()
 		# plt.ylim(ybot, ytop)
-		plt.savefig(self.filename + ".png")
+		#plt.savefig(self.filename + ".png")
 
 	def parametrizedKeithley(self,parametrized_samples):
 		number_samples = self.endTime/self.interval
@@ -271,6 +281,11 @@ class Measurer(object):
 			self.b2901a_reading.append(self.scm2.readVoltage())
 		elif(self.b_metertype=='a'):
 			self.b2901a_reading.append(self.scm2.readCurrent())
+		self.b2901a_input.append(self.scm2.curr_source_value)
+		if(self.sourcetype == 'a'):
+			self.keithley_input.append(self.scm.source_current)
+		else :
+			self.keithley_input.append(self.scm.source_voltage)
 
 
 
@@ -278,11 +293,13 @@ class Measurer(object):
 		number_samples = self.endTime/self.interval
 		fn = 'log_' + self.filename
 		save = open(fn, 'w+')
-		inputs = np.linspace(self.source_i, self.source_f, number_samples)
+		#inputs = np.linspace(self.source_i, self.source_f, number_samples)
+		inputs = np.array(self.keithley_input)
 		outputs = np.array(self.keithley_reading)
-		binputs = np.linspace(self.source_i, self.source_f, number_samples)
+		#binputs = np.linspace(self.source_i, self.source_f, number_samples)
+		binputs = np.array(self.b2901a_input)
 		boutputs = np.array(self.b2901a_reading)
-		save.write(self.sourcetype + ', ' + self.metertype + '\t' + self.scm2.sourcetype + ' ' + self.b_metertype)
+		save.write('keithley: ' + self.sourcetype + ', ' + self.metertype + '\t' + 'b2901a: ' +self.scm2.sourcetype + ' ' + self.b_metertype)
 		save.write('\n')
 		for (inp,outp, binp, boutp) in zip(inputs, outputs, binputs, boutputs):
 			mystring = "{:.9f}".format(float(inp)) + ', ' + "{:.9f}".format(float(outp)) + '\t'
@@ -292,6 +309,13 @@ class Measurer(object):
 		save.close()
 		if(not self.isParametrizedExperiment()):
 			self.plot(inputs, outputs)
+		else :
+			i = 5
+			j = 0
+			while(j < i):
+				self.plot(outputs[number_samples*j:number_samples*j+number_samples], binputs[number_samples*j:number_samples*j+number_samples], j, afilename='b2')
+				self.plot(boutputs[number_samples*j:number_samples*j+number_samples], binputs[number_samples*j:number_samples*j+number_samples], j, afilename='keithley')
+				j+=1
 		
 	def customFunction(self):
 		pass
@@ -302,11 +326,11 @@ class Measurer(object):
 		else:
 			return False
 
-	def plot(self, a, b):
+	def plot(self, a, b, number=0, afilename=''):
 		plt.plot(a,b)
 		plt.ylabel(self.metertype)
 		plt.xlabel(self.sourcetype)
-		plt.savefig(self.filename + '.png')
+		plt.savefig(self.filename +afilename+ number + '.png')
 	def execute(self):
 		self.applyConfigs()
 		if(self.isParametrizedExperiment()):
@@ -340,7 +364,7 @@ def testScript():
 
 	keithley.shutdown()
 def main():
-	measurer = Measurer('testfile')
+	measurer = Measurer('testfile3 ')
 	for a in measurer.config:
 		print(a)
 		print(measurer.config[a])
