@@ -330,11 +330,23 @@ class Measurer(object):
 		if(self.isParametrizedExperiment()):
 			self.plotParametrized()
 		else: 
-			plt.plot(a,b)
-			plt.ylabel(self.metertype)
-			plt.xlabel(self.sourcetype)
-			plt.savefig(self.filename +afilename+ number + '.png')
-
+			self.plot_keithley()
+			self.plot_b2901a()
+	
+	def plot_keithley(self):
+		inputs, outputs = [], []
+		if(self.sourcetype == 'v'):
+			inputs = np.array(self.keithley_input)
+			outputs = np.array(self.keithley_reading)
+		if(self.sourcetype == 'a'):
+			outputs = np.array(self.keithley_input)
+			inputs = np.array(self.keithley_reading)
+		plt.plot(inputs, outputs)
+		plt.title('keithley  v x i')
+		plt.savefig(self.filename + '_keithley' + '.png')
+		plt.clf()
+	def plot_b2901a(self):
+		pass
 	def plotParametrized(self):
 		legends = []
 		if(self.config['Experiment'] == 'param_keithley'):
