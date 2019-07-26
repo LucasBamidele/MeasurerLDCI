@@ -332,13 +332,13 @@ class Measurer(object):
 		else: 
 			self.plot_keithley()
 			self.plot_b2901a()
-	
+
 	def plot_keithley(self):
 		inputs, outputs = [], []
 		if(self.sourcetype == 'v'):
 			inputs = np.array(self.keithley_input)
 			outputs = np.array(self.keithley_reading)
-		if(self.sourcetype == 'a'):
+		elif(self.sourcetype == 'a'):
 			outputs = np.array(self.keithley_input)
 			inputs = np.array(self.keithley_reading)
 		plt.plot(inputs, outputs)
@@ -346,7 +346,17 @@ class Measurer(object):
 		plt.savefig(self.filename + '_keithley' + '.png')
 		plt.clf()
 	def plot_b2901a(self):
-		pass
+		inputs, outputs = [], []
+		if(self.scm2.sourcetype == 'v'):
+			inputs = np.array(self.b2901a_input)
+			outputs = np.array(self.b2901a_reading)
+		elif(self.scm2.sourcetype == 'a'):
+			outputs = np.array(self.b2901a_input)
+			inputs = np.array(self.b2901a_reading)
+		plt.plot(inputs, outputs)
+		plt.title('b290a1a  v x i')
+		plt.savefig(self.filename + '_b2901a' + '.png')
+		plt.clf()
 	def plotParametrized(self):
 		legends = []
 		if(self.config['Experiment'] == 'param_keithley'):
