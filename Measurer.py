@@ -14,6 +14,14 @@ TODO: ADD PARAMETRIZED MEASUREMENT
 	normal = 20 ms
 	short = 0.2 ms
 
+
+
+	TODO: adjust log + plotting
+		Clean up code
+		Make readfile easier to make/read
+
+
+
 """
 class Measurer(object):
 	"""docstring for Measurer"""
@@ -95,6 +103,8 @@ class Measurer(object):
 			self.b_metertype = self.config['B2901A']['metertype']
 			self.b_source_i = float(self.config['B2901A']['source_i'])
 			self.b_source_f = float(self.config['B2901A']['source_f'])
+			self.b_interval = float(self.config['B2901A']['interval'])
+		
 		except Exception as e:
 			raise e
 			exit('Config error!')
@@ -273,19 +283,19 @@ class Measurer(object):
 
 	def registerReading(self):
 		if(self.metertype == 'v'):
-			self.keithley_reading.append(self.scm.voltage)
+			self.keithley_reading.append(float(self.scm.voltage))
 		elif(self.metertype == 'a') :
-			self.keithley_reading.append(self.scm.current)
+			self.keithley_reading.append(float(self.scm.current))
 
 		if(self.b_metertype=='v'):
-			self.b2901a_reading.append(self.scm2.readVoltage())
+			self.b2901a_reading.append(float(self.scm2.readVoltage()))
 		elif(self.b_metertype=='a'):
-			self.b2901a_reading.append(self.scm2.readCurrent())
-		self.b2901a_input.append(self.scm2.curr_source_value)
+			self.b2901a_reading.append(float(self.scm2.readCurrent()))
+		self.b2901a_input.append(float(self.scm2.curr_source_value))
 		if(self.sourcetype == 'a'):
-			self.keithley_input.append(self.scm.source_current)
+			self.keithley_input.append(float(self.scm.source_current))
 		else :
-			self.keithley_input.append(self.scm.source_voltage)
+			self.keithley_input.append(float(self.scm.source_voltage))
 
 
 
@@ -293,10 +303,8 @@ class Measurer(object):
 		number_samples = self.endTime/self.interval
 		fn = 'log_' + self.filename
 		save = open(fn, 'w+')
-		#inputs = np.linspace(self.source_i, self.source_f, number_samples)
 		inputs = np.array(self.keithley_input)
 		outputs = np.array(self.keithley_reading)
-		#binputs = np.linspace(self.source_i, self.source_f, number_samples)
 		binputs = np.array(self.b2901a_input)
 		boutputs = np.array(self.b2901a_reading)
 		save.write('keithley: ' + self.sourcetype + ', ' + self.metertype + '\t' + 'b2901a: ' +self.scm2.sourcetype + ' ' + self.b_metertype)
@@ -307,15 +315,7 @@ class Measurer(object):
 			save.write(mystring)
 			save.write('\n')
 		save.close()
-		if(not self.isParametrizedExperiment()):
-			self.plot(inputs, outputs)
-		else :
-			i = 5
-			j = 0
-			while(j < i):
-				self.plot(outputs[number_samples*j:number_samples*j+number_samples], binputs[number_samples*j:number_samples*j+number_samples], j, afilename='b2')
-				self.plot(boutputs[number_samples*j:number_samples*j+number_samples], binputs[number_samples*j:number_samples*j+number_samples], j, afilename='keithley')
-				j+=1
+		self.plot(inputs, outputs)
 		
 	def customFunction(self):
 		pass
@@ -327,10 +327,63 @@ class Measurer(object):
 			return False
 
 	def plot(self, a, b, number=0, afilename=''):
-		plt.plot(a,b)
-		plt.ylabel(self.metertype)
-		plt.xlabel(self.sourcetype)
-		plt.savefig(self.filename +afilename+ number + '.png')
+		if(self.isParametrizedExperiment()):
+			self.plotParametrized()
+		else: 
+			plt.plot(a,b)
+			plt.ylabel(self.metertype)
+			plt.xlabel(self.sourcetype)
+			plt.savefig(self.filename +afilename+ number + '.png')
+
+	def plotParametrized(self):
+		legends = []
+		if(self.config['Experiment'] == 'param_keithley'):
+			j = 0
+			i = number_samples
+			for inp in self.keithley_input:
+				if(self.self.scm2.sourcetype=='v'):
+					plt.plot(self.b290a1_input[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
+				else :
+					plt.plot(self.b2901a_reading[i*j:i*j+i], b290a1_input[i*j:i*j+i])
+				j+=1
+			plt.legend(self.b2901a_input)
+			plt.savefig(self.filename + '' + '.png')
+			plt.clf()
+			j = 0
+			for inp in self.keithley_input:
+				if(self.self.scm2.sourcetype=='v'):
+					plt.plot(self.b290a1_input[i*j:i*j+i], keithley_reading[i*j:i*j+i])
+				else :
+					plt.plot(self.b2901a_reading[i*j:i*j+i], keithley_reading[i*j:i*j+i])
+				j+=1
+			plt.legend(self.keithley_input)
+			plt.savefig(self.filename + '2' + '.png')
+
+		elif(self.config['Experiment'] == 'param_b2901a'):
+			j = 0
+			i = number_samples
+			for inp in self.b2901a_input:
+				if(self.sourcetype=='v'):
+					plt.plot(self.keithley_input[i*j:i*j+i], keithley_reading[i*j:i*j+i])
+				else :
+					plt.plot(self.keithley_reading[i*j:i*j+i], keithley_input[i*j:i*j+i])
+				j+=1
+			plt.legend(self.b2901a_input)
+			plt.savefig(self.filename + '' + '.png')
+			plt.clf()
+			j = 0
+			for inp in self.b2901a_input:
+				if(self.sourcetype=='v'):
+					plt.plot(self.keithley_input[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
+				else :
+					plt.plot(self.keithley_reading[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
+
+				j+=1
+			plt.legend(self.b2901a_input)
+			plt.savefig(self.filename + '2' + '.png')
+		else:
+			print('something is wrong')
+
 	def execute(self):
 		self.applyConfigs()
 		if(self.isParametrizedExperiment()):
