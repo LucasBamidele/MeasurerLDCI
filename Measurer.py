@@ -153,6 +153,7 @@ class Measurer(object):
 	def rampB2901a(self):
 		number_samples = self.b_number_samples
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		self.scm2.setSource(self.b_source_i)
 		i = 0
 		while(i < number_samples):
 			time.sleep(self.b_interval)
@@ -184,6 +185,7 @@ class Measurer(object):
 		number_samples = number_samples
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		self.scm2.setSource(self.b_source_i)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
 			i = 0
@@ -233,7 +235,7 @@ class Measurer(object):
 			i = 0
 			while(i < parametrized_samples):
 				j = 0
-				self.scm2.setSource(0)
+				self.scm2.setSource(self.b_source_i)
 				while(j < number_samples):
 					self.scm2.incrementSource(b_increment)
 					time.sleep(self.b_interval)
