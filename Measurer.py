@@ -74,10 +74,9 @@ class Measurer(object):
 				self.sourcetype = self.config['Keithley2400']['sourcetype']
 				self.interval = float(self.config['Keithley2400']['interval'])
 				self.metertype = self.config['Keithley2400']['metertype']
-				self.endTime = float(self.config['Keithley2400']['endTime'])
 				self.source_i = float(self.config['Keithley2400']['source_i'])
 				self.source_f = float(self.config['Keithley2400']['source_f'])
-				self.number_samples = self.endTime/self.interval
+				self.number_samples = int(self.config['Keithley2400']['number_samples']) +1
 				if(self.config['Keithley2400']['rear']=='true'):
 					self.scm.use_rear_terminals()
 				elif(self.config['Keithley2400']['rear']=='false'):
@@ -106,8 +105,7 @@ class Measurer(object):
 				self.b_source_i = float(self.config['B2901A']['source_i'])
 				self.b_source_f = float(self.config['B2901A']['source_f'])
 				self.b_interval = float(self.config['B2901A']['interval'])
-				self.b_endTime = float(self.config['B2901A']['endTime'])
-				self.b_number_samples = self.b_endTime/self.b_interval
+				self.b_number_samples = int(self.config['B2901A']['number_samples'])+1
 			
 			except Exception as e:
 				raise e
@@ -152,7 +150,7 @@ class Measurer(object):
 		self.scm.enable_source()
 
 	def rampB2901a(self):
-		number_samples = self.endTime/self.interval
+		number_samples = self.b_number_samples
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		i = 0
 		while(i < number_samples):
@@ -162,7 +160,7 @@ class Measurer(object):
 			i+=1
 
 	def rampKeithley(self):
-		number_samples = self.endTime/self.interval
+		number_samples = self.number_samples
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
@@ -182,7 +180,7 @@ class Measurer(object):
 				i+=1
 
 	def rampFunction(self):
-		number_samples = self.endTime/self.interval
+		number_samples = number_samples
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
@@ -210,14 +208,10 @@ class Measurer(object):
 		elif(self.sourcetype=='a'):
 			self.scm.source_current += increment
 
-	def subplot(self,x,y, mylabel):
-		pass
-		#plt.plot(x,y) #label=mylabel)
-
 	def parametrizedB2901(self, parametrized_samples):
-		self.number_samples = parametrized_samples
-		number_samples = self.endTime/self.interval
-		self.b_number_samples = number_samples
+		number_samples = self.b_number_samples
+		parametrized_samples = self.number_samples
+
 		increment = (self.source_f - self.source_i)/float(parametrized_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
@@ -231,10 +225,6 @@ class Measurer(object):
 					self.scm2.incrementSource(b_increment)
 					self.registerReading()
 					j+=1
-				#axis_x = self.keithley_reading[i*j:i*j + j]
-				axis_x = self.b2901a_input[i*j: i*j + j]
-				axis_y = self.b2901a_reading[i*j:i*j+j]
-				self.subplot(axis_x, axis_y, self.scm.source_voltage)
 				self.scm.source_voltage += increment
 				i+=1
 		else :
@@ -248,9 +238,6 @@ class Measurer(object):
 					time.sleep(self.interval)
 					self.registerReading()
 					j += 1
-				axis_x = self.keithley_reading[i*j:i*j + j]
-				axis_y = self.b2901a_reading[i*j:i*j+j]
-				self.subplot(axis_x, axis_y, self.scm.source_current)
 				self.scm.source_current += increment
 				i+=1
 		self.saveplot(self.source_i, self.source_f, self.b_source_i, self.b_source_f)
@@ -262,9 +249,8 @@ class Measurer(object):
 		#plt.savefig(self.filename + ".png")
 
 	def parametrizedKeithley(self,parametrized_samples):
-		self.b_number_samples = parametrized_samples
-		number_samples = self.endTime/self.interval
-		self.number_samples = number_samples
+		number_samples = self.number_samples
+		parametrized_samples = self.b_number_samples
 		inputs = np.linspace(self.source_i, self.source_f, number_samples)
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(parametrized_samples)
@@ -280,9 +266,6 @@ class Measurer(object):
 					self.scm.source_voltage += increment
 					self.registerReading()
 					j+=1
-				axis_x = self.keithley_reading[i*j:i*j + j]
-				axis_y = self.b2901a_reading[i*j:i*j+j]
-				self.subplot(axis_x, axis_y, self.scm.curr_source_value)
 				self.scm2.incrementSource(b_increment)
 				i+=1
 		else :
@@ -296,9 +279,6 @@ class Measurer(object):
 					time.sleep(self.interval)
 					self.registerReading()
 					j += 1
-				axis_x = self.keithley_reading[i*j:i*j + j]
-				axis_y = self.b2901a_reading[i*j:i*j+j]
-				self.subplot(axis_x, axis_y, self.scm2.curr_source_value)
 				self.scm2.incrementSource(b_increment)
 				i+=1
 		self.saveplot(self.source_i, self.source_f, self.b_source_i, self.b_source_f)
