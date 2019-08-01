@@ -93,7 +93,7 @@ class Measurer(object):
 			elif(self.config['Keithley2400']['metertype']=='a'):
 				self.scm.measure_current()
 			else :
-				print('invalid config')
+				print('invalid config: keithley meter type must be `a` or `v` ')
 				exit()
 		else :
 			self.scm = False
@@ -117,7 +117,7 @@ class Measurer(object):
 			elif(self.config['B2901A']['sourcetype']=='a'):
 				self.scm2.setCurrentOutput()
 			else :
-				print ('invalid config')
+				print ('invalid config: b2901a sourcetype type must be `a` or `v`')
 				exit()
 			self.scm2.setMaxVoltage(float(self.config['B2901A']['max_voltage']))
 			if(self.config['B2901A']['metertype'] == 'v'):
@@ -130,7 +130,7 @@ class Measurer(object):
 			else :
 				self.scm2 = False
 		if((not (self.scm and self.scm2)) and self.isParametrizedExperiment()):
-			print('invalid config')
+			print('invalid config: for parametrized experiments both instruments must be active')
 			exit()
 
 
@@ -311,21 +311,22 @@ class Measurer(object):
 
 
 	def registerReading(self):
-		if(self.metertype == 'v'):
-			self.keithley_reading.append(float(self.scm.voltage))
-		elif(self.metertype == 'a') :
-			self.keithley_reading.append(float(self.scm.current))
-
-		if(self.b_metertype=='v'):
-			self.b2901a_reading.append(float(self.scm2.readVoltage()))
-		elif(self.b_metertype=='a'):
-			self.b2901a_reading.append(float(self.scm2.readCurrent()))
-		self.b2901a_input.append(float(self.scm2.curr_source_value))
-		if(self.sourcetype == 'a'):
-			self.keithley_input.append(float(self.scm.source_current))
-		else :
-			self.keithley_input.append(float(self.scm.source_voltage))
-
+		if(self.scm):
+			if(self.metertype == 'v'):
+				self.keithley_reading.append(float(self.scm.voltage))
+			elif(self.metertype == 'a') :
+				self.keithley_reading.append(float(self.scm.current))
+			if(self.sourcetype == 'a'):
+				self.keithley_input.append(float(self.scm.source_current))
+			else :
+				self.keithley_input.append(float(self.scm.source_voltage))
+		if(self.scm2):
+			if(self.b_metertype=='v'):
+				self.b2901a_reading.append(float(self.scm2.readVoltage()))
+			elif(self.b_metertype=='a'):
+				self.b2901a_reading.append(float(self.scm2.readCurrent()))
+			self.b2901a_input.append(float(self.scm2.curr_source_value))
+		
 
 
 	def saveLog(self):
@@ -361,30 +362,32 @@ class Measurer(object):
 			self.plot_b2901a()
 
 	def plot_keithley(self):
-		inputs, outputs = [], []
-		if(self.sourcetype == 'v'):
-			inputs = np.array(self.keithley_input)
-			outputs = np.array(self.keithley_reading)
-		elif(self.sourcetype == 'a'):
-			outputs = np.array(self.keithley_input)
-			inputs = np.array(self.keithley_reading)
-		plt.plot(inputs, outputs)
-		plt.title('keithley  v x i')
-		plt.savefig(self.filename + '_keithley' + '.png')
-		plt.clf()
+		if(self.scm):
+			inputs, outputs = [], []
+			if(self.sourcetype == 'v'):
+				inputs = np.array(self.keithley_input)
+				outputs = np.array(self.keithley_reading)
+			elif(self.sourcetype == 'a'):
+				outputs = np.array(self.keithley_input)
+				inputs = np.array(self.keithley_reading)
+			plt.plot(inputs, outputs)
+			plt.title('keithley  v x i')
+			plt.savefig(self.filename + '_keithley' + '.png')
+			plt.clf()
 
 	def plot_b2901a(self):
-		inputs, outputs = [], []
-		if(self.scm2.sourcetype == 'v'):
-			inputs = np.array(self.b2901a_input)
-			outputs = np.array(self.b2901a_reading)
-		elif(self.scm2.sourcetype == 'a'):
-			outputs = np.array(self.b2901a_input)
-			inputs = np.array(self.b2901a_reading)
-		plt.plot(inputs, outputs)
-		plt.title('b290a1a  v x i')
-		plt.savefig(self.filename + '_b2901a' + '.png')
-		plt.clf()
+		if(self.scm2):
+			inputs, outputs = [], []
+			if(self.scm2.sourcetype == 'v'):
+				inputs = np.array(self.b2901a_input)
+				outputs = np.array(self.b2901a_reading)
+			elif(self.scm2.sourcetype == 'a'):
+				outputs = np.array(self.b2901a_input)
+				inputs = np.array(self.b2901a_reading)
+			plt.plot(inputs, outputs)
+			plt.title('b290a1a  v x i')
+			plt.savefig(self.filename + '_b2901a' + '.png')
+			plt.clf()
 
 	def plotParametrized(self):
 		legends = []
@@ -392,32 +395,36 @@ class Measurer(object):
 			j = 0
 			i = int(self.number_samples)
 			for inp in self.keithley_input:
+				if(inp not in legends):
+					legends += [inp]
 				plt.plot(self.keithley_input[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
 				j+=1
-			#plt.legend(self.b2901a_input)
+			plt.legend(legends)
 			plt.savefig(self.filename + '' + '.png')
 			plt.clf()
 			j = 0
 			for inp in self.keithley_input:
 				plt.plot(self.keithley_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
 				j+=1
-			#plt.legend(self.keithley_input)
+			plt.legend(legends)
 			plt.savefig(self.filename + '_2' + '.png')
 
 		elif(self.config['Experiment'] == 'parametrized_b2901a'):
 			j = 0
 			i = int(self.b_number_samples)
 			for inp in self.b2901a_input:
+				if(inp not in legends):
+					legends += [inp]
 				plt.plot(self.b2901a_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
 				j+=1
-			#plt.legend(self.b2901a_input)
+			plt.legend(legends)
 			plt.savefig(self.filename + '' + '.png')
 			plt.clf()
 			j = 0
 			for inp in self.b2901a_input:
 				plt.plot(self.b2901a_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
 				j+=1
-			#plt.legend(self.b2901a_input)
+			plt.legend(legends)
 			plt.savefig(self.filename + '_2' + '.png')
 		else:
 			print('something is wrong')

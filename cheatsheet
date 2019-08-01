@@ -20,7 +20,6 @@ B2901a:
 	metertype=a,v
 	max_voltage= float
 	max_current= float
-	compliance_voltage= float
 	rear = bool (true or false) 
 	endTime = 2.0
 	source_i = 0.0,
