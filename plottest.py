@@ -27,7 +27,7 @@ def main():
 	plt.plot(v1[60:80], a1[60:80], label='0.3 volts')
 	plt.plot(v1[80:100], a1[80:100], label='0.4 volts')
 	plt.legend(['0', '0.1','0.2', '0.3', '0.4'])
-	plt.show()
+	plt.savefig('/Users/lucasbamidele/Desktop/figure9.png')
 
 
 if __name__ == '__main__':

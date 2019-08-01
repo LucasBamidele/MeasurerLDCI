@@ -1,4 +1,5 @@
 import time
+import sys
 from pymeasure.instruments.keithley import Keithley2400
 import numpy as np
 from B2901A import *
@@ -97,7 +98,7 @@ class Measurer(object):
 		else :
 			self.scm = False
 
-		if(self.config['B2901A']['active'] == 'true')
+		if(self.config['B2901A']['active'] == 'true'):
 			self.scm2 = B2901A("GPIB0::23")
 			try:
 				self.scm2.sourcetype = self.config['B2901A']['sourcetype']
@@ -125,7 +126,7 @@ class Measurer(object):
 			else :
 				print ('invalid config')
 				exit()
-			else :
+		else :
 				self.scm2 = False
 		if((not (self.scm and self.scm2)) and self.isParametrizedExperiment()):
 			print('invalid config: for parametrized experiments both instruments must be active')
@@ -221,7 +222,7 @@ class Measurer(object):
 				j = 0
 				self.scm2.setSource(self.b_source_i)
 				while(j < number_samples):
-					time.sleep(self.interval)
+					time.sleep(self.b_interval)
 					self.scm2.incrementSource(b_increment)
 					self.registerReading()
 					j+=1
@@ -235,7 +236,7 @@ class Measurer(object):
 				self.scm2.setSource(0)
 				while(j < number_samples):
 					self.scm2.incrementSource(b_increment)
-					time.sleep(self.interval)
+					time.sleep(self.b_interval)
 					self.registerReading()
 					j += 1
 				self.scm.source_current += increment
@@ -313,10 +314,22 @@ class Measurer(object):
 		number_samples = self.endTime/self.interval
 		fn = 'log_' + self.filename
 		save = open(fn, 'w+')
-		inputs = np.array(self.keithley_input)
-		outputs = np.array(self.keithley_reading)
-		binputs = np.array(self.b2901a_input)
-		boutputs = np.array(self.b2901a_reading)
+		if(self.keithley_input):
+			inputs = np.array(self.keithley_input)
+			outputs = np.array(self.keithley_reading)
+		else:
+			size = len(self.b2901a_input)
+			inputs = np.zeros(size)
+			outputs = np.zeros(size)
+
+		if(self.b2901a_input):
+			binputs = np.array(self.b2901a_input)
+			boutputs = np.array(self.b2901a_reading)
+		else :
+			size = len(self.keithley_input)
+			binputs = np.zeros(size)
+			boutputs = np.zeros(size)
+
 		save.write('keithley: ' + self.sourcetype + ', ' + self.metertype + '\t' + 'b2901a: ' +self.scm2.sourcetype + ' ' + self.b_metertype)
 		save.write('\n')
 		for (inp,outp, binp, boutp) in zip(inputs, outputs, binputs, boutputs):
@@ -441,7 +454,8 @@ def testScript():
 
 	keithley.shutdown()
 def main():
-	measurer = Measurer('testfile4')
+	filename = sys.argv[1]
+	measurer = Measurer(filename)
 	for a in measurer.config:
 		print(a)
 		print(measurer.config[a])
