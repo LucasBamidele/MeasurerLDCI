@@ -80,6 +80,7 @@ class Measurer(object):
 			self.endTime = float(self.config['Keithley2400']['endTime'])
 			self.source_i = float(self.config['Keithley2400']['source_i'])
 			self.source_f = float(self.config['Keithley2400']['source_f'])
+			self.number_samples = self.endTime/self.interval
 			if(self.config['Keithley2400']['rear']=='true'):
 				self.scm.use_rear_terminals()
 			elif(self.config['Keithley2400']['rear']=='false'):
@@ -104,6 +105,8 @@ class Measurer(object):
 			self.b_source_i = float(self.config['B2901A']['source_i'])
 			self.b_source_f = float(self.config['B2901A']['source_f'])
 			self.b_interval = float(self.config['B2901A']['interval'])
+			self.b_endTime = float(self.config['B2901A']['endTime'])
+			self.b_number_samples = self.b_endTime/self.b_interval
 		
 		except Exception as e:
 			raise e
@@ -175,7 +178,9 @@ class Measurer(object):
 		#plt.plot(x,y) #label=mylabel)
 
 	def parametrizedB2901(self, parametrized_samples):
+		self.number_samples = parametrized_samples
 		number_samples = self.endTime/self.interval
+		self.b_number_samples = number_samples
 		increment = (self.source_f - self.source_i)/float(parametrized_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
@@ -220,7 +225,9 @@ class Measurer(object):
 		#plt.savefig(self.filename + ".png")
 
 	def parametrizedKeithley(self,parametrized_samples):
+		self.b_number_samples = parametrized_samples
 		number_samples = self.endTime/self.interval
+		self.number_samples = number_samples
 		inputs = np.linspace(self.source_i, self.source_f, number_samples)
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(parametrized_samples)
@@ -345,6 +352,7 @@ class Measurer(object):
 		plt.title('keithley  v x i')
 		plt.savefig(self.filename + '_keithley' + '.png')
 		plt.clf()
+
 	def plot_b2901a(self):
 		inputs, outputs = [], []
 		if(self.scm2.sourcetype == 'v'):
@@ -357,52 +365,40 @@ class Measurer(object):
 		plt.title('b290a1a  v x i')
 		plt.savefig(self.filename + '_b2901a' + '.png')
 		plt.clf()
+
 	def plotParametrized(self):
 		legends = []
 		if(self.config['Experiment'] == 'param_keithley'):
 			j = 0
-			i = number_samples
+			i = int(self.number_samples)
 			for inp in self.keithley_input:
-				if(self.self.scm2.sourcetype=='v'):
-					plt.plot(self.b290a1_input[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
-				else :
-					plt.plot(self.b2901a_reading[i*j:i*j+i], b290a1_input[i*j:i*j+i])
+				plt.plot(self.keithley_input[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
 				j+=1
-			plt.legend(self.b2901a_input)
+			#plt.legend(self.b2901a_input)
 			plt.savefig(self.filename + '' + '.png')
 			plt.clf()
 			j = 0
 			for inp in self.keithley_input:
-				if(self.self.scm2.sourcetype=='v'):
-					plt.plot(self.b290a1_input[i*j:i*j+i], keithley_reading[i*j:i*j+i])
-				else :
-					plt.plot(self.b2901a_reading[i*j:i*j+i], keithley_reading[i*j:i*j+i])
+				plt.plot(self.keithley_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
 				j+=1
-			plt.legend(self.keithley_input)
-			plt.savefig(self.filename + '2' + '.png')
+			#plt.legend(self.keithley_input)
+			plt.savefig(self.filename + '_2' + '.png')
 
 		elif(self.config['Experiment'] == 'param_b2901a'):
 			j = 0
-			i = number_samples
+			i = int(self.b_number_samples)
 			for inp in self.b2901a_input:
-				if(self.sourcetype=='v'):
-					plt.plot(self.keithley_input[i*j:i*j+i], keithley_reading[i*j:i*j+i])
-				else :
-					plt.plot(self.keithley_reading[i*j:i*j+i], keithley_input[i*j:i*j+i])
+				plt.plot(self.b2901a_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
 				j+=1
-			plt.legend(self.b2901a_input)
+			#plt.legend(self.b2901a_input)
 			plt.savefig(self.filename + '' + '.png')
 			plt.clf()
 			j = 0
 			for inp in self.b2901a_input:
-				if(self.sourcetype=='v'):
-					plt.plot(self.keithley_input[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
-				else :
-					plt.plot(self.keithley_reading[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
-
+				plt.plot(self.b2901a_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
 				j+=1
-			plt.legend(self.b2901a_input)
-			plt.savefig(self.filename + '2' + '.png')
+			#plt.legend(self.b2901a_input)
+			plt.savefig(self.filename + '_2' + '.png')
 		else:
 			print('something is wrong')
 
@@ -439,7 +435,7 @@ def testScript():
 
 	keithley.shutdown()
 def main():
-	measurer = Measurer('testfile3 ')
+	measurer = Measurer('testfile4')
 	for a in measurer.config:
 		print(a)
 		print(measurer.config[a])
