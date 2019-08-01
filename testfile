@@ -1,4 +1,4 @@
-Experiment=param_keithley
+Experiment=parametrized_keithley
 Keithley2400
 type=ramp,interval=0.1,sourcetype=a,metertype=v,max_voltage=10,max_current=0.01,compliance_voltage=10,rear =false, endTime = 2.0, source_i = 0.0, source_f = 0.01
 B2901A

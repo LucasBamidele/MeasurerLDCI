@@ -28,8 +28,6 @@ class Measurer(object):
 	def __init__(self, filename):
 		if(filename):
 			self.filename = filename
-			self.scm = Keithley2400("GPIB1::24")
-			self.scm2 = B2901A("GPIB0::23")
 			self.config = {}
 			self.readFile()
 			self.keithley_input = []
@@ -65,74 +63,83 @@ class Measurer(object):
 			b = x.split('=')
 			aux_dict[b[0].strip()] = b[1].strip()
 		self.config['B2901A'] = aux_dict
-		if(self.config['Keithley2400']['type'] == 'custom'):
-			print('not implemented yet')
-			exit()
 
 	"""
 	put here the configs
 	"""
 	def applyConfigs(self):
-		try:
-			self.sourcetype = self.config['Keithley2400']['sourcetype']
-			self.interval = float(self.config['Keithley2400']['interval'])
-			self.metertype = self.config['Keithley2400']['metertype']
-			self.endTime = float(self.config['Keithley2400']['endTime'])
-			self.source_i = float(self.config['Keithley2400']['source_i'])
-			self.source_f = float(self.config['Keithley2400']['source_f'])
-			self.number_samples = self.endTime/self.interval
-			if(self.config['Keithley2400']['rear']=='true'):
-				self.scm.use_rear_terminals()
-			elif(self.config['Keithley2400']['rear']=='false'):
-				self.scm.use_front_terminals()
+		if(self.config['Keithley2400']['active'] == 'true'):
+			self.scm = Keithley2400("GPIB1::24")
+			try:
+				self.sourcetype = self.config['Keithley2400']['sourcetype']
+				self.interval = float(self.config['Keithley2400']['interval'])
+				self.metertype = self.config['Keithley2400']['metertype']
+				self.endTime = float(self.config['Keithley2400']['endTime'])
+				self.source_i = float(self.config['Keithley2400']['source_i'])
+				self.source_f = float(self.config['Keithley2400']['source_f'])
+				self.number_samples = self.endTime/self.interval
+				if(self.config['Keithley2400']['rear']=='true'):
+					self.scm.use_rear_terminals()
+				elif(self.config['Keithley2400']['rear']=='false'):
+					self.scm.use_front_terminals()
+				else :
+					print('rear must be true/false')
+			except Exception as e:
+				raise e
+				exit('Config error!')
+			if(self.config['Keithley2400']['metertype']=='v'):
+				self.scm.measure_voltage()
+				print('measure voltage!')
+			elif(self.config['Keithley2400']['metertype']=='a'):
+				self.scm.measure_current()
 			else :
-				print('rear must be true/false')
-		except Exception as e:
-			raise e
-			exit('Config error!')
-		if(self.config['Keithley2400']['metertype']=='v'):
-			self.scm.measure_voltage()
-			print('measure voltage!')
-		elif(self.config['Keithley2400']['metertype']=='a'):
-			self.scm.measure_current()
+				print('invalid config')
+				exit()
 		else :
+			self.scm = False
+
+		if(self.config['B2901A']['active'] == 'true')
+			self.scm2 = B2901A("GPIB0::23")
+			try:
+				self.scm2.sourcetype = self.config['B2901A']['sourcetype']
+				self.b_metertype = self.config['B2901A']['metertype']
+				self.b_source_i = float(self.config['B2901A']['source_i'])
+				self.b_source_f = float(self.config['B2901A']['source_f'])
+				self.b_interval = float(self.config['B2901A']['interval'])
+				self.b_endTime = float(self.config['B2901A']['endTime'])
+				self.b_number_samples = self.b_endTime/self.b_interval
+			
+			except Exception as e:
+				raise e
+				exit('Config error!')
+			if(self.config['B2901A']['sourcetype'] == 'v'):
+				self.scm2.setVoltageOutput()
+			elif(self.config['B2901A']['sourcetype']=='a'):
+				self.scm2.setCurrentOutput()
+			else :
+				print ('invalid config')
+				exit()
+			self.scm2.setMaxVoltage(float(self.config['B2901A']['max_voltage']))
+			if(self.config['B2901A']['metertype'] == 'v'):
+				self.scm2.setMeasureVoltage()
+			elif(self.config['B2901A']['metertype']=='a'):
+				self.scm2.setMeasureCurrent()
+			else :
+				print ('invalid config')
+				exit()
+			else :
+				self.scm2 = False
+		if((not (self.scm and self.scm2)) and self.isParametrizedExperiment()):
 			print('invalid config')
 			exit()
 
-		try:
-			self.scm2.sourcetype = self.config['B2901A']['sourcetype']
-			self.b_metertype = self.config['B2901A']['metertype']
-			self.b_source_i = float(self.config['B2901A']['source_i'])
-			self.b_source_f = float(self.config['B2901A']['source_f'])
-			self.b_interval = float(self.config['B2901A']['interval'])
-			self.b_endTime = float(self.config['B2901A']['endTime'])
-			self.b_number_samples = self.b_endTime/self.b_interval
-		
-		except Exception as e:
-			raise e
-			exit('Config error!')
-		if(self.config['B2901A']['sourcetype'] == 'v'):
-			self.scm2.setVoltageOutput()
-		elif(self.config['B2901A']['sourcetype']=='a'):
-			self.scm2.setCurrentOutput()
-		else :
-			print ('invalid config')
-			exit()
-		self.scm2.setMaxVoltage(float(self.config['B2901A']['max_voltage']))
-		if(self.config['B2901A']['metertype'] == 'v'):
-			self.scm2.setMeasureVoltage()
-		elif(self.config['B2901A']['metertype']=='a'):
-			self.scm2.setMeasureCurrent()
-		else :
-			print ('invalid config')
-			exit()
 
 
 
 	def setToVoltage(self):
 		self.scm.apply_voltage()
 		self.scm.source_voltage_range = float(self.config['Keithley2400']['max_voltage'])
-		#self.scm.compliance_voltage = float(self.config['Keithley2400']['compliance_voltage'])
+		self.scm.compliance_voltage = float(self.config['Keithley2400']['compliance_voltage'])
 		self.scm.source_voltage = float(self.source_i)
 		self.scm.enable_source()  
 
@@ -144,12 +151,41 @@ class Measurer(object):
 		self.scm.source_current = float(self.source_i)
 		self.scm.enable_source()
 
+	def rampB2901a(self):
+		number_samples = self.endTime/self.interval
+		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		i = 0
+		while(i < number_samples):
+			time.sleep(self.b_interval)
+			self.scm2.incrementSource(b_increment)
+			self.registerReading()
+			i+=1
+
+	def rampKeithley(self):
+		number_samples = self.endTime/self.interval
+		increment = (self.source_f - self.source_i)/float(number_samples)
+		if(self.sourcetype == 'v'):
+			self.setToVoltage()
+			i = 0
+			while(i < number_samples):
+				self.scm.source_voltage += increment
+				self.registerReading()
+				time.sleep(self.interval)
+				i+=1
+		else :
+			self.setToCurrent()
+			i = 0
+			while(i < number_samples):
+				self.scm.source_current += increment
+				self.registerReading()
+				time.sleep(self.interval)
+				i+=1
+
 	def rampFunction(self):
 		number_samples = self.endTime/self.interval
 		increment = (self.source_f - self.source_i)/float(number_samples)
 		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
 		if(self.sourcetype == 'v'):
-			print('here!')
 			self.setToVoltage()
 			i = 0
 			while(i < number_samples):
@@ -167,6 +203,7 @@ class Measurer(object):
 				time.sleep(self.interval)
 				self.registerReading()
 				i+=1
+
 	def incrementSourceKeithley(self, increment):
 		if(self.sourcetype=='v'):
 			self.scm.source_voltage += increment
@@ -267,26 +304,11 @@ class Measurer(object):
 		self.saveplot(self.source_i, self.source_f, self.b_source_i, self.b_source_f)
 
 	def parametrizedMeasure(self):
-		if(self.config['Experiment']=='param_b2901a'):
+		if(self.config['Experiment']=='parametrized_b2901a'):
 			self.parametrizedB2901(5)
-		elif(self.config['Experiment']=='param_keithley'):
+		elif(self.config['Experiment']=='parametrized_keithley'):
 			self.parametrizedKeithley(5)
 
-
-	def unitStepFunction(self):
-		number_samples = self.endTime/self.interval
-		self.scm.source_current = source.i
-		time.sleep(0.1)
-		if(self.sourcetype == 'v'):
-			self.setToVoltage()
-		elif(self.sourcetype == 'a'):
-			self.setToCurrent()
-		j = 0
-		while(j < number_samples):
-			curr_time = time.time()
-			j+=1
-			time.sleep(self.interval)
-			self.registerReading()
 
 	def registerReading(self):
 		if(self.metertype == 'v'):
@@ -324,11 +346,9 @@ class Measurer(object):
 		save.close()
 		self.plot(inputs, outputs)
 		
-	def customFunction(self):
-		pass
 
 	def isParametrizedExperiment(self):
-		if(self.config['Experiment']=='param_keithley' or self.config['Experiment']=='param_b2901a'):
+		if(self.config['Experiment']=='parametrized_keithley' or self.config['Experiment']=='parametrized_b2901a'):
 			return True
 		else:
 			return False
@@ -368,7 +388,7 @@ class Measurer(object):
 
 	def plotParametrized(self):
 		legends = []
-		if(self.config['Experiment'] == 'param_keithley'):
+		if(self.config['Experiment'] == 'parametrized_keithley'):
 			j = 0
 			i = int(self.number_samples)
 			for inp in self.keithley_input:
@@ -384,7 +404,7 @@ class Measurer(object):
 			#plt.legend(self.keithley_input)
 			plt.savefig(self.filename + '_2' + '.png')
 
-		elif(self.config['Experiment'] == 'param_b2901a'):
+		elif(self.config['Experiment'] == 'parametrized_b2901a'):
 			j = 0
 			i = int(self.b_number_samples)
 			for inp in self.b2901a_input:
@@ -408,14 +428,13 @@ class Measurer(object):
 			print('Parametrized experiment')
 			self.parametrizedMeasure()
 		else :
-			func = self.config['Keithley2400']['type']
-			if(func == 'ramp'):
+			if(not (self.scm and self.scm2)):
+				if(self.scm):
+					self.rampKeithley()
+				else :
+					self.rampB2901a()
+			else:
 				self.rampFunction()
-			elif(func == 'step'):
-				self.unitStepFunction()
-			elif(func == 'custom'):
-				print('not yet implemented')
-				exit('exiting...')
 		self.saveLog()
 		self.scm.shutdown()
 		self.scm2.disableSourceOutput()
