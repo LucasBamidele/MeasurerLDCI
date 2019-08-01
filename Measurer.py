@@ -77,7 +77,7 @@ class Measurer(object):
 				self.metertype = self.config['Keithley2400']['metertype']
 				self.source_i = float(self.config['Keithley2400']['source_i'])
 				self.source_f = float(self.config['Keithley2400']['source_f'])
-				self.number_samples = int(self.config['Keithley2400']['number_samples']) +1
+				self.number_samples = int(self.config['Keithley2400']['number_samples'])
 				if(self.config['Keithley2400']['rear']=='true'):
 					self.scm.use_rear_terminals()
 				elif(self.config['Keithley2400']['rear']=='false'):
@@ -106,7 +106,7 @@ class Measurer(object):
 				self.b_source_i = float(self.config['B2901A']['source_i'])
 				self.b_source_f = float(self.config['B2901A']['source_f'])
 				self.b_interval = float(self.config['B2901A']['interval'])
-				self.b_number_samples = int(self.config['B2901A']['number_samples'])+1
+				self.b_number_samples = int(self.config['B2901A']['number_samples'])
 			
 			except Exception as e:
 				raise e
@@ -313,7 +313,6 @@ class Measurer(object):
 
 
 	def saveLog(self):
-		number_samples = self.endTime/self.interval
 		fn = 'log_' + self.filename
 		save = open(fn, 'w+')
 		if(self.keithley_input):
@@ -392,7 +391,7 @@ class Measurer(object):
 			for inp in self.keithley_input:
 				if(inp not in legends):
 					legends += [inp]
-				plt.plot(self.keithley_input[i*j:i*j+i], b2901a_reading[i*j:i*j+i])
+				plt.plot(self.keithley_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
 				j+=1
 			plt.legend(legends)
 			plt.savefig(self.filename + '' + '.png')
