@@ -1,0 +1,5 @@
+Experiment=parametrized_keithley
+Keithley2400
+active=true,interval=0.1,sourcetype=v,metertype=a,max_voltage=40,max_current=0.01,compliance_voltage=40,rear =true, number_samples=50, source_i = -10, source_f = 40
+B2901A
+active=true,interval=0.1,sourcetype=v,metertype=a,max_voltage=40,max_current=1.0,compliance_voltage=40, number_samples = 4, source_i = 5, source_f = 20

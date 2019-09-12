@@ -70,7 +70,7 @@ class Measurer(object):
 	"""
 	def applyConfigs(self):
 		if(self.config['Keithley2400']['active'] == 'true'):
-			self.scm = Keithley2400("GPIB1::24")
+			self.scm = Keithley2400("GPIB0::24")
 			try:
 				self.sourcetype = self.config['Keithley2400']['sourcetype']
 				self.interval = float(self.config['Keithley2400']['interval'])
@@ -99,7 +99,7 @@ class Measurer(object):
 			self.scm = False
 
 		if(self.config['B2901A']['active'] == 'true'):
-			self.scm2 = B2901A("GPIB0::23")
+			self.scm2 = B2901A("GPIB1::23")
 			try:
 				self.scm2.sourcetype = self.config['B2901A']['sourcetype']
 				self.b_metertype = self.config['B2901A']['metertype']
@@ -339,7 +339,16 @@ class Measurer(object):
 			save.write(mystring)
 			save.write('\n')
 		save.close()
+		self.saveCSV(inputs, outputs, binputs, boutputs)
 		self.plot(inputs, outputs)
+		
+	def saveCSV(self, inputs, outputs, binputs, boutputs):
+		import csv
+		with open(self.filename + '.csv', 'w', newline='') as csvfile:
+			csvwriter = csv.writer(csvfile, delimiter=',')
+			csvwriter.writerow(['Keithley_' + self.sourcetype, 'Keithley_' + self.metertype, 'b2901a_' +self.scm2.sourcetype, 'b2901a_' +self.b_metertype])
+			for (inp,outp, binp, boutp) in zip(inputs, outputs, binputs, boutputs):
+				csvwriter.writerow([inp, outp, binp, boutp])
 		
 
 	def isParametrizedExperiment(self):

@@ -1,5 +1,5 @@
 experiments:
-parametrized_keithley, parametrized_b2901a, parametrized, ramp
+parametrized_keithley, parametrized_b2901a, ramp
 instruments:
 Keithley:
 	active= bool (true, false)
@@ -10,7 +10,7 @@ Keithley:
 	max_current= float
 	compliance_voltage= float
 	rear = bool (true or false) 
-	endTime = 2.0
+	number_samples =int
 	source_i = 0.0,
 	source_f = 0.01
 B2901a:
@@ -21,6 +21,6 @@ B2901a:
 	max_voltage= float
 	max_current= float
 	rear = bool (true or false) 
-	endTime = 2.0
+	number_samples = int
 	source_i = 0.0,
 	source_f = 0.01

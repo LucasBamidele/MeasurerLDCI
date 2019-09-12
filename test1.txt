@@ -1,5 +1,5 @@
 Experiment=parametrized_b2901a
 Keithley2400
-active=true,interval=0.1,sourcetype=v,metertype=a,max_voltage=10,max_current=0.01,compliance_voltage=10,rear =true, number_samples=3, source_i = -0.5, source_f = 1.0
+active=true,interval=0.1,sourcetype=v,metertype=a,max_voltage=10,max_current=0.01,compliance_voltage=10,rear =true, number_samples=1, source_i = 0.5, source_f = 0.5
 B2901A
 active=true,interval=0.1,sourcetype=v,metertype=a,max_voltage=10,max_current=1.0,compliance_voltage=10, number_samples = 50, source_i = 0, source_f = 2
