@@ -341,15 +341,50 @@ class Measurer(object):
 		save.close()
 		self.saveCSV(inputs, outputs, binputs, boutputs)
 		self.plot(inputs, outputs)
+		if(self.metertype=='a'):
+			outputs = np.absolute(outputs)
+		if(self.b_metertype == 'a'):
+			boutputs = np.absolute(boutputs)
+		self.saveCSV(inputs, outputs, binputs, boutputs, addfilename='abs_i')
 		
-	def saveCSV(self, inputs, outputs, binputs, boutputs):
+	def saveCSV(self, inputs, outputs, binputs, boutputs, addfilename=''):
 		import csv
-		with open(self.filename + '.csv', 'w', newline='') as csvfile:
+		with open(self.filename + addfilename +'.csv', 'w', newline='') as csvfile:
 			csvwriter = csv.writer(csvfile, delimiter=',')
 			csvwriter.writerow(['Keithley_' + self.sourcetype, 'Keithley_' + self.metertype, 'b2901a_' +self.scm2.sourcetype, 'b2901a_' +self.b_metertype])
 			for (inp,outp, binp, boutp) in zip(inputs, outputs, binputs, boutputs):
 				csvwriter.writerow([inp, outp, binp, boutp])
+		self.saveCSVespecial(inputs, outputs, binputs, boutputs, addfilename=addfilename)
 		
+	def saveCSVespecial(self, inputs, outputs, binputs, boutputs, addfilename=''):
+		import csv
+		with open(self.filename + addfilename + '_csv2.csv', 'w', newline='') as csvfile:
+			csvwriter = csv.writer(csvfile, delimiter=',')
+			row = []
+			if(self.config['Experiment']=='parametrized_keithley'):
+				for a in range(b_number_samples):
+					row.append('keithley_' + self.sourcetype)
+					row.append('keithley_' + self.metertype)
+					row.append('b2901_' + self.b_metertype)
+				for b in range(number_samples):
+					for a in range(b_number_samples):
+						row.append(inputs[a*number_samples+b])
+						row.append(outputs[a*number_samples+b])
+						row.append(boutputs[a*number_samples+b])
+					csvwriter.writerow(row)
+					row = []
+
+			if(self.config['Experiment']=='parametrized_b2901a'):
+				for a in range(b_number_samples):
+					row.append('b2901_' + self.scm.sourcetype)
+					row.append('b2901_' + self.b_metertype)
+					row.append('keithley_' + self.metertype)
+				for b in range(b_number_samples):
+					for a in range(number_samples):
+						row.append(binputs[a*b_number_samples+b])
+						row.append(boutputs[a*number_samples+b])
+						row.append(outputs[a*number_samples+b])
+					csvwriter.writerow(row)
 
 	def isParametrizedExperiment(self):
 		if(self.config['Experiment']=='parametrized_keithley' or self.config['Experiment']=='parametrized_b2901a'):
