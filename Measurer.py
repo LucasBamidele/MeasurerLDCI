@@ -394,7 +394,7 @@ class Measurer(object):
 
 	def plot(self, a, b, number=0, afilename=''):
 		if(self.isParametrizedExperiment()):
-			self.plotParametrized()
+			self.plotParametrized2()
 		else: 
 			self.plot_keithley()
 			self.plot_b2901a()
@@ -432,9 +432,10 @@ class Measurer(object):
 		if(self.config['Experiment'] == 'parametrized_keithley'):
 			j = 0
 			i = int(self.number_samples)
-			for inp in self.keithley_input:
+			for inps in self.b2901a_input:
 				if(inp not in legends):
 					legends += [inp]
+			for inp in self.keithley_input:
 				plt.plot(self.keithley_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
 				j+=1
 			plt.legend(legends)
@@ -450,9 +451,10 @@ class Measurer(object):
 		elif(self.config['Experiment'] == 'parametrized_b2901a'):
 			j = 0
 			i = int(self.b_number_samples)
-			for inp in self.b2901a_input:
+			for inps in self.keithley_input:
 				if(inp not in legends):
 					legends += [inp]
+			for inp in self.b2901a_input:
 				plt.plot(self.b2901a_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
 				j+=1
 			plt.legend(legends)
@@ -460,6 +462,46 @@ class Measurer(object):
 			plt.clf()
 			j = 0
 			for inp in self.b2901a_input:
+				plt.plot(self.b2901a_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
+				j+=1
+			plt.legend(legends)
+			plt.savefig(self.filename + '_2' + '.png')
+		else:
+			print('something is wrong')
+
+	def plotParametrized2(self):
+		legends = []
+		if(self.config['Experiment'] == 'parametrized_keithley'):
+			j = 0
+			i = int(self.number_samples)
+			for inps in self.b2901a_input:
+				if(inp not in legends):
+					legends += [inp]
+					plt.plot(self.keithley_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
+					j+=1
+			plt.legend(legends)
+			plt.savefig(self.filename + '' + '.png')
+			plt.clf()
+			j = 0
+			for inp in legends:
+				plt.plot(self.keithley_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
+				j+=1
+			plt.legend(legends)
+			plt.savefig(self.filename + '_2' + '.png')
+
+		elif(self.config['Experiment'] == 'parametrized_b2901a'):
+			j = 0
+			i = int(self.b_number_samples)
+			for inps in self.keithley_input:
+				if(inp not in legends):
+					legends += [inp]
+					plt.plot(self.b2901a_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
+					j+=1
+			plt.legend(legends)
+			plt.savefig(self.filename + '' + '.png')
+			plt.clf()
+			j = 0
+			for inp in legends:
 				plt.plot(self.b2901a_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
 				j+=1
 			plt.legend(legends)
