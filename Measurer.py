@@ -152,7 +152,7 @@ class Measurer(object):
 
 	def rampB2901a(self):
 		number_samples = self.b_number_samples
-		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		b_increment = (self.b_source_f + self.b_source_i)/(float(number_samples)+1)
 		self.scm2.setSource(self.b_source_i)
 		i = 0
 		while(i < number_samples):
@@ -163,7 +163,7 @@ class Measurer(object):
 
 	def rampKeithley(self):
 		number_samples = self.number_samples
-		increment = (self.source_f - self.source_i)/float(number_samples)
+		increment = (self.source_f + self.source_i)/(float(number_samples)+1)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
 			i = 0
@@ -183,8 +183,8 @@ class Measurer(object):
 
 	def rampFunction(self):
 		number_samples = number_samples
-		increment = (self.source_f - self.source_i)/float(number_samples)
-		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		increment = (self.source_f + self.source_i)/(float(number_samples)+1)
+		b_increment = (self.b_source_f + self.b_source_i)/(float(number_samples)+1)
 		self.scm2.setSource(self.b_source_i)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
@@ -215,8 +215,8 @@ class Measurer(object):
 		number_samples = self.b_number_samples
 		parametrized_samples = self.number_samples
 
-		increment = (self.source_f - self.source_i)/float(parametrized_samples)
-		b_increment = (self.b_source_f - self.b_source_i)/float(number_samples)
+		increment = (self.source_f + self.source_i)/(float(parametrized_samples)+1)
+		b_increment = (self.b_source_f + self.b_source_i)/(float(number_samples)+1)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
 			i = 0
@@ -255,8 +255,8 @@ class Measurer(object):
 		number_samples = self.number_samples
 		parametrized_samples = self.b_number_samples
 		inputs = np.linspace(self.source_i, self.source_f, number_samples)
-		increment = (self.source_f - self.source_i)/float(number_samples)
-		b_increment = (self.b_source_f - self.b_source_i)/float(parametrized_samples)
+		increment = (self.source_f + self.source_i)/(float(number_samples)+1)
+		b_increment = (self.b_source_f + self.b_source_i)/(float(parametrized_samples)+1)
 		self.scm2.setSource(self.b_source_i)
 		if(self.sourcetype == 'v'):
 			self.setToVoltage()
@@ -362,28 +362,32 @@ class Measurer(object):
 			csvwriter = csv.writer(csvfile, delimiter=',')
 			row = []
 			if(self.config['Experiment']=='parametrized_keithley'):
-				for a in range(b_number_samples):
-					row.append('keithley_' + self.sourcetype)
-					row.append('keithley_' + self.metertype)
-					row.append('b2901_' + self.b_metertype)
-				for b in range(number_samples):
-					for a in range(b_number_samples):
-						row.append(inputs[a*number_samples+b])
-						row.append(outputs[a*number_samples+b])
-						row.append(boutputs[a*number_samples+b])
-					csvwriter.writerow(row)
+				for a in range(self.b_number_samples):
+					row.append('keithley_' + self.sourcetype + '(b2901_in=' +str(binputs[a*self.number_samples]) + ')')
+					row.append('keithley_' + self.metertype  + '(b2901_in=' + str(binputs[a*self.number_samples]) + ')')
+					row.append('b2901_' + self.b_metertype  + '(b2901_in=' +str(binputs[a*self.number_samples]) + ')')
+				csvwriter.writerow(row)
+				for b in range(self.number_samples):
 					row = []
+					for a in range(self.b_number_samples):
+						row.append(inputs[a*self.number_samples+b])
+						row.append(outputs[a*self.number_samples+b])
+						row.append(boutputs[a*self.number_samples+b])
+					csvwriter.writerow(row)
 
 			if(self.config['Experiment']=='parametrized_b2901a'):
-				for a in range(b_number_samples):
-					row.append('b2901_' + self.scm.sourcetype)
-					row.append('b2901_' + self.b_metertype)
-					row.append('keithley_' + self.metertype)
-				for b in range(b_number_samples):
-					for a in range(number_samples):
-						row.append(binputs[a*b_number_samples+b])
-						row.append(boutputs[a*number_samples+b])
-						row.append(outputs[a*number_samples+b])
+				for a in range(self.number_samples):
+					row.append('b2901_' + self.sourcetype  + '(keithley_in=' + str(inputs[a*self.b_number_samples]) + ')')
+					row.append('b2901_' + self.b_metertype  + '(keithley_in=' +str(inputs[a*self.b_number_samples]) + ')')
+					row.append('keithley_' + self.metertype  + '(keithley_in=' +str(inputs[a*self.b_number_samples]) + ')')
+				csvwriter.writerow(row)
+
+				for b in range(self.b_number_samples):
+					row = []
+					for a in range(self.number_samples):
+						row.append(binputs[a*self.b_number_samples+b])
+						row.append(boutputs[a*self.b_number_samples+b])
+						row.append(outputs[a*self.b_number_samples+b])
 					csvwriter.writerow(row)
 
 	def isParametrizedExperiment(self):
@@ -474,7 +478,7 @@ class Measurer(object):
 		if(self.config['Experiment'] == 'parametrized_keithley'):
 			j = 0
 			i = int(self.number_samples)
-			for inps in self.b2901a_input:
+			for inp in self.b2901a_input:
 				if(inp not in legends):
 					legends += [inp]
 					plt.plot(self.keithley_input[i*j:i*j+i], self.b2901a_reading[i*j:i*j+i])
@@ -492,7 +496,7 @@ class Measurer(object):
 		elif(self.config['Experiment'] == 'parametrized_b2901a'):
 			j = 0
 			i = int(self.b_number_samples)
-			for inps in self.keithley_input:
+			for inp in self.keithley_input:
 				if(inp not in legends):
 					legends += [inp]
 					plt.plot(self.b2901a_input[i*j:i*j+i], self.keithley_reading[i*j:i*j+i])
